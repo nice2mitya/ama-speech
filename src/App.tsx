@@ -139,11 +139,18 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">AMA Консьерж</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Голосовой помощник с распознаванием русской речи
-          </p>
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+          <img
+            src="/Ama_logo_ver_blue.png"
+            alt="AMA Logo"
+            className="h-12 w-auto"
+          />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">AMA Консьерж</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Голосовой помощник с распознаванием русской речи
+            </p>
+          </div>
         </div>
       </header>
 
