@@ -14,7 +14,7 @@ function App() {
 
   const audioCaptureRef = useRef<AudioCaptureService | null>(null);
   const n8nServiceRef = useRef<N8nWebhookService>(
-    new N8nWebhookService('https://genproducer.app.n8n.cloud/webhook/AMA-SPEECH')
+    new N8nWebhookService('https://n8n.srv803152.hstgr.cloud/webhook/AMA-SPEECH')
   );
 
   const handleSpeechStart = () => {
