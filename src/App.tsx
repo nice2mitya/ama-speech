@@ -71,7 +71,12 @@ function App() {
         )
       );
 
-      setRecordingState('listening');
+      if (audioCaptureRef.current) {
+        await audioCaptureRef.current.stop();
+        audioCaptureRef.current = null;
+      }
+      setRecordingState('idle');
+      setAudioLevel(0);
     } catch (error) {
       console.error('Error processing speech:', error);
 
@@ -88,7 +93,12 @@ function App() {
         )
       );
 
-      setRecordingState('listening');
+      if (audioCaptureRef.current) {
+        await audioCaptureRef.current.stop();
+        audioCaptureRef.current = null;
+      }
+      setRecordingState('idle');
+      setAudioLevel(0);
     }
   };
 
