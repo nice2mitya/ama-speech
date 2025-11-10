@@ -21,7 +21,6 @@ export class AudioCaptureService {
   private audioBuffer: Float32Array[] = [];
   private speechStartTime = 0;
   private silenceStartTime = 0;
-  private silenceThreshold = 0.02;
   private silenceDuration = 1400;
   private minSpeechDuration = 400;
   private events: AudioCaptureEvents;
@@ -72,12 +71,11 @@ export class AudioCaptureService {
     if (!this.isRecording) return;
 
     const inputData = event.inputBuffer.getChannelData(0);
-    const audioLevel = this.calculateAudioLevel(inputData);
+    const isVoice = this.detectVoice();
 
-    const isSpeech = audioLevel > this.silenceThreshold;
     const now = Date.now();
 
-    if (isSpeech) {
+    if (isVoice) {
       if (!this.isSpeaking) {
         this.isSpeaking = true;
         this.speechStartTime = now;
@@ -122,12 +120,39 @@ export class AudioCaptureService {
     this.events.onSpeechEnd(segment);
   }
 
-  private calculateAudioLevel(data: Float32Array): number {
-    let sum = 0;
-    for (let i = 0; i < data.length; i++) {
-      sum += data[i] * data[i];
+  private detectVoice(): boolean {
+    if (!this.analyserNode) return false;
+
+    const bufferLength = this.analyserNode.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    this.analyserNode.getByteFrequencyData(dataArray);
+
+    const sampleRate = this.audioContext?.sampleRate || 16000;
+    const frequencyResolution = sampleRate / (this.analyserNode.fftSize);
+
+    const voiceMinFreq = 85;
+    const voiceMaxFreq = 3400;
+    const minBin = Math.floor(voiceMinFreq / frequencyResolution);
+    const maxBin = Math.floor(voiceMaxFreq / frequencyResolution);
+
+    let voiceEnergy = 0;
+    let totalEnergy = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const value = dataArray[i];
+      totalEnergy += value;
+
+      if (i >= minBin && i <= maxBin) {
+        voiceEnergy += value;
+      }
     }
-    return Math.sqrt(sum / data.length);
+
+    if (totalEnergy === 0) return false;
+
+    const voiceRatio = voiceEnergy / totalEnergy;
+    const averageVoiceLevel = voiceEnergy / (maxBin - minBin);
+
+    return voiceRatio > 0.3 && averageVoiceLevel > 15;
   }
 
   private startAudioLevelMonitoring(): void {
