@@ -32,23 +32,23 @@ function App() {
       return;
     }
 
+    const conversationId = `${Date.now()}-${Math.random()}`;
+    const newItem: ConversationItem = {
+      id: conversationId,
+      question: 'Распознаю...',
+      answer: '',
+      timestamp: segment.timestamp,
+      status: 'processing',
+    };
+
+    setConversations((prev) => [...prev, newItem]);
+
     try {
       const wavBlob = AudioEncoder.encodeToWav(segment.audioData, audioContext.sampleRate);
       const audioBase64 = await AudioEncoder.blobToBase64(wavBlob);
 
-      const conversationId = `${Date.now()}-${Math.random()}`;
-      const newItem: ConversationItem = {
-        id: conversationId,
-        question: 'Распознаю...',
-        answer: '',
-        timestamp: segment.timestamp,
-        status: 'processing',
-      };
-
-      setConversations((prev) => [...prev, newItem]);
-
       if (!n8nServiceRef.current) {
-        throw new Error('N8n webhook не настроен. Откройте настройки.');
+        throw new Error('N8n webhook не настроен.');
       }
 
       const response = await n8nServiceRef.current.sendAudio({
@@ -77,7 +77,7 @@ function App() {
 
       setConversations((prev) =>
         prev.map((item) =>
-          item.id === conversationId || item.question === 'Распознаю...'
+          item.id === conversationId
             ? {
                 ...item,
                 question: item.question === 'Распознаю...' ? 'Ошибка' : item.question,
