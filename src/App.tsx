@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { ConversationFeed } from './components/ConversationFeed';
 import { ControlPanel } from './components/ControlPanel';
+import { SettingsMenu, AudioConfig } from './components/SettingsMenu';
 import { AudioCaptureService, AudioSegment } from './services/audioCapture';
 import { AudioEncoder } from './services/audioEncoder';
 import { N8nWebhookService } from './services/n8nWebhook';
@@ -11,6 +12,13 @@ function App() {
   const [currentTranscription, setCurrentTranscription] = useState('');
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [audioLevel, setAudioLevel] = useState(0);
+  const [audioConfig, setAudioConfig] = useState<AudioConfig>({
+    voiceRatioThreshold: 0.5,
+    voiceLevelThreshold: 30,
+    noiseRatioThreshold: 0.4,
+    silenceDuration: 1400,
+    minSpeechDuration: 400,
+  });
 
   const audioCaptureRef = useRef<AudioCaptureService | null>(null);
   const n8nServiceRef = useRef<N8nWebhookService>(
@@ -110,15 +118,25 @@ function App() {
     setRecordingState('idle');
   };
 
+  const handleConfigChange = (newConfig: AudioConfig) => {
+    setAudioConfig(newConfig);
+    if (audioCaptureRef.current) {
+      audioCaptureRef.current.updateConfig(newConfig);
+    }
+  };
+
   const toggleRecording = async () => {
     if (recordingState === 'idle') {
       try {
-        audioCaptureRef.current = new AudioCaptureService({
-          onSpeechStart: handleSpeechStart,
-          onSpeechEnd: handleSpeechEnd,
-          onAudioLevel: handleAudioLevel,
-          onError: handleError,
-        });
+        audioCaptureRef.current = new AudioCaptureService(
+          {
+            onSpeechStart: handleSpeechStart,
+            onSpeechEnd: handleSpeechEnd,
+            onAudioLevel: handleAudioLevel,
+            onError: handleError,
+          },
+          audioConfig
+        );
 
         await audioCaptureRef.current.start();
         setRecordingState('listening');
@@ -138,6 +156,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <SettingsMenu config={audioConfig} onConfigChange={handleConfigChange} />
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
           <img

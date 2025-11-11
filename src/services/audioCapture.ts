@@ -11,6 +11,14 @@ export interface AudioCaptureEvents {
   onError: (error: Error) => void;
 }
 
+export interface AudioConfig {
+  voiceRatioThreshold: number;
+  voiceLevelThreshold: number;
+  noiseRatioThreshold: number;
+  silenceDuration: number;
+  minSpeechDuration: number;
+}
+
 export class AudioCaptureService {
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
@@ -23,11 +31,25 @@ export class AudioCaptureService {
   private silenceStartTime = 0;
   private silenceDuration = 1400;
   private minSpeechDuration = 400;
+  private voiceRatioThreshold = 0.5;
+  private voiceLevelThreshold = 30;
+  private noiseRatioThreshold = 0.4;
   private events: AudioCaptureEvents;
   private animationFrameId: number | null = null;
 
-  constructor(events: AudioCaptureEvents) {
+  constructor(events: AudioCaptureEvents, config?: AudioConfig) {
     this.events = events;
+    if (config) {
+      this.updateConfig(config);
+    }
+  }
+
+  updateConfig(config: AudioConfig): void {
+    this.voiceRatioThreshold = config.voiceRatioThreshold;
+    this.voiceLevelThreshold = config.voiceLevelThreshold;
+    this.noiseRatioThreshold = config.noiseRatioThreshold;
+    this.silenceDuration = config.silenceDuration;
+    this.minSpeechDuration = config.minSpeechDuration;
   }
 
   async start(): Promise<void> {
@@ -166,7 +188,7 @@ export class AudioCaptureService {
     const averageVoiceLevel = voiceEnergy / (maxBin - minBin);
     const noiseRatio = (lowFreqNoise + highFreqNoise) / totalEnergy;
 
-    return voiceRatio > 0.5 && averageVoiceLevel > 30 && noiseRatio < 0.4;
+    return voiceRatio > this.voiceRatioThreshold && averageVoiceLevel > this.voiceLevelThreshold && noiseRatio < this.noiseRatioThreshold;
   }
 
   private startAudioLevelMonitoring(): void {
