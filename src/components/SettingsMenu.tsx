@@ -135,8 +135,8 @@ export function SettingsMenu({ config, onConfigChange }: SettingsMenuProps) {
                   <input
                     type="range"
                     min="200"
-                    max="1000"
-                    step="50"
+                    max="3000"
+                    step="100"
                     value={config.minSpeechDuration}
                     onChange={(e) => handleChange('minSpeechDuration', parseFloat(e.target.value))}
                     className="w-full"
