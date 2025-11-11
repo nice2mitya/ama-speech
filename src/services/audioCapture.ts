@@ -135,8 +135,13 @@ export class AudioCaptureService {
     const minBin = Math.floor(voiceMinFreq / frequencyResolution);
     const maxBin = Math.floor(voiceMaxFreq / frequencyResolution);
 
+    const lowFreqMax = Math.floor(85 / frequencyResolution);
+    const highFreqMin = Math.floor(3400 / frequencyResolution);
+
     let voiceEnergy = 0;
     let totalEnergy = 0;
+    let lowFreqNoise = 0;
+    let highFreqNoise = 0;
 
     for (let i = 0; i < bufferLength; i++) {
       const value = dataArray[i];
@@ -145,14 +150,23 @@ export class AudioCaptureService {
       if (i >= minBin && i <= maxBin) {
         voiceEnergy += value;
       }
+
+      if (i < lowFreqMax) {
+        lowFreqNoise += value;
+      }
+
+      if (i > highFreqMin && i < bufferLength) {
+        highFreqNoise += value;
+      }
     }
 
     if (totalEnergy === 0) return false;
 
     const voiceRatio = voiceEnergy / totalEnergy;
     const averageVoiceLevel = voiceEnergy / (maxBin - minBin);
+    const noiseRatio = (lowFreqNoise + highFreqNoise) / totalEnergy;
 
-    return voiceRatio > 0.4 && averageVoiceLevel > 25;
+    return voiceRatio > 0.5 && averageVoiceLevel > 30 && noiseRatio < 0.4;
   }
 
   private startAudioLevelMonitoring(): void {
