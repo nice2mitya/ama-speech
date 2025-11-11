@@ -152,7 +152,7 @@ export class AudioCaptureService {
     const voiceRatio = voiceEnergy / totalEnergy;
     const averageVoiceLevel = voiceEnergy / (maxBin - minBin);
 
-    return voiceRatio > 0.3 && averageVoiceLevel > 15;
+    return voiceRatio > 0.4 && averageVoiceLevel > 25;
   }
 
   private startAudioLevelMonitoring(): void {
